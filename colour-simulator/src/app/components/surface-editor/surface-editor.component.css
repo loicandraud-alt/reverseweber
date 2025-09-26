@@ -53,28 +53,14 @@
   background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
-.file-input {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.6rem 1rem;
-  background: #f3f4f6;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.file-input input[type='file'] {
-  opacity: 0;
-  position: absolute;
-  inset: 0;
-  cursor: pointer;
-}
-
 .surface-editor__filename {
   font-size: 0.9rem;
   color: #1f2937;
+}
+
+.surface-editor__hint {
+  font-size: 0.9rem;
+  color: #6b7280;
 }
 
 .surface-editor__warning {
@@ -167,6 +153,16 @@
 .zone-meta span {
   display: inline-block;
   margin-right: 0.25rem;
+}
+
+.surface-editor__empty {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background: #eef2ff;
+  border-radius: 0.75rem;
+  color: #4338ca;
+  border: 1px dashed rgba(99, 102, 241, 0.4);
+  font-size: 0.95rem;
 }
 
 @media (min-width: 1024px) {

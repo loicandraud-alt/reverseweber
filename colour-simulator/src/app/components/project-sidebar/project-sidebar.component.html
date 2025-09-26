@@ -17,6 +17,10 @@
 
   <section class="sidebar__section">
     <h3>Choisir une ambiance</h3>
+    <label class="sidebar__upload">
+      <input type="file" accept="image/*" (change)="onImageSelected($event)" />
+      Importer une image
+    </label>
     <div class="sidebar__categories">
       <details *ngFor="let category of categories" [open]="category.id === surface.category">
         <summary>{{ category.label }}</summary>
