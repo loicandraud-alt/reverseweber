@@ -34,6 +34,13 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
   private pendingBackgroundUrl: string | null = null;
   private pendingZones: CustomSurfaceZone[] | null = null;
   private isRestoringZones = false;
+  isCreatingZone = false;
+  private creationPoints: { x: number; y: number }[] = [];
+  private creationPreviewPoint: { x: number; y: number } | null = null;
+  private creationPolyline?: any;
+  private creationPointMarkers: any[] = [];
+  private readonly canvasClickHandler = (event: any) => this.handleCanvasClick(event);
+  private readonly canvasMoveHandler = (event: any) => this.handleCanvasMove(event);
 
   ngAfterViewInit(): void {
     if (typeof fabric === 'undefined') {
@@ -83,6 +90,8 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
   }
 
   ngOnDestroy(): void {
+    this.cancelPolygonCreation();
+    this.detachCreationListeners();
     this.canvas?.dispose();
   }
 
@@ -91,7 +100,15 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
   }
 
   get canAddZones(): boolean {
-    return this.isCanvasReady && !!this.customSurface?.imageDataUrl;
+    return this.isCanvasReady && !!this.customSurface?.imageDataUrl && !this.isCreatingZone;
+  }
+
+  get canFinishZone(): boolean {
+    return this.isCreatingZone && this.creationPoints.length >= 3;
+  }
+
+  get creationPointsCount(): number {
+    return this.creationPoints.length;
   }
 
   addPolygonZone(): void {
@@ -99,15 +116,20 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
       return;
     }
 
-    const zoneId = `zone-${this.nextZoneIndex++}`;
-    const points = [
-      { x: 100, y: 100 },
-      { x: 260, y: 100 },
-      { x: 260, y: 200 },
-      { x: 100, y: 200 }
-    ];
+    if (this.isCreatingZone) {
+      return;
+    }
 
-    const polygon = new fabric.Polygon(points, {
+    this.startPolygonCreation();
+  }
+
+  finishPolygonCreation(): void {
+    if (!this.canvas || !this.canFinishZone) {
+      return;
+    }
+
+    const zoneId = `zone-${this.nextZoneIndex++}`;
+    const polygon = new fabric.Polygon(this.creationPoints, {
       fill: 'rgba(0, 153, 255, 0.25)',
       stroke: '#0099ff',
       strokeWidth: 2,
@@ -121,15 +143,7 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
       lockScalingY: true
     });
 
-    polygon.set('zoneId', zoneId);
-    polygon.set('label', `Zone ${this.nextZoneIndex - 1}`);
-
-    this.makePolygonEditable(polygon);
-
-    this.canvas.add(polygon);
-    this.canvas.setActiveObject(polygon);
-    this.canvas.renderAll();
-    this.syncZonesFromCanvas();
+    this.finalizePolygon(polygon, zoneId);
   }
 
   removeSelectedZone(): void {
@@ -286,6 +300,8 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
       return;
     }
 
+    this.cancelPolygonCreation();
+
     if (!customSurface || !customSurface.imageDataUrl) {
       this.clearCanvas();
       return;
@@ -329,6 +345,7 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
     if (!this.canvas) {
       return;
     }
+    this.cancelPolygonCreation();
     this.canvas.setBackgroundImage(undefined, this.canvas.renderAll.bind(this.canvas));
     this.backgroundUrl = null;
     this.zones = [];
@@ -346,6 +363,7 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
       return;
     }
 
+    this.cancelPolygonCreation();
     this.isRestoringZones = true;
     const existingPolygons = this.canvas
       .getObjects()
@@ -414,5 +432,200 @@ export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestr
     } else if (zones.length === 0) {
       this.nextZoneIndex = 1;
     }
+  }
+
+  cancelPolygonCreation(): void {
+    if (!this.isCreatingZone) {
+      return;
+    }
+    this.detachCreationListeners();
+    this.clearCreationArtifacts();
+    this.creationPoints = [];
+    this.creationPreviewPoint = null;
+    this.isCreatingZone = false;
+    this.restoreCanvasInteraction();
+    this.canvas?.requestRenderAll();
+  }
+
+  private startPolygonCreation(): void {
+    if (!this.canvas) {
+      return;
+    }
+
+    this.isCreatingZone = true;
+    this.creationPoints = [];
+    this.creationPreviewPoint = null;
+    this.clearCreationArtifacts();
+    this.canvas.discardActiveObject();
+    this.selectedZoneId = null;
+    this.canvas.requestRenderAll();
+    this.canvas.selection = false;
+    this.canvas.defaultCursor = 'crosshair';
+    this.togglePolygonSelectability(false);
+    this.canvas.on('mouse:down', this.canvasClickHandler);
+    this.canvas.on('mouse:move', this.canvasMoveHandler);
+  }
+
+  private finalizePolygon(polygon: any, zoneId: string): void {
+    if (!this.canvas) {
+      return;
+    }
+
+    polygon.set('zoneId', zoneId);
+    polygon.set('label', `Zone ${this.nextZoneIndex - 1}`);
+
+    this.makePolygonEditable(polygon);
+
+    this.canvas.add(polygon);
+    this.canvas.setActiveObject(polygon);
+
+    this.detachCreationListeners();
+    this.clearCreationArtifacts();
+    this.creationPoints = [];
+    this.creationPreviewPoint = null;
+    this.isCreatingZone = false;
+    this.restoreCanvasInteraction();
+
+    this.canvas.requestRenderAll();
+    this.selectedZoneId = zoneId;
+    this.syncZonesFromCanvas();
+  }
+
+  private handleCanvasClick(event: any): void {
+    if (!this.canvas || !this.isCreatingZone) {
+      return;
+    }
+
+    const pointer = this.canvas.getPointer(event.e);
+    const point = {
+      x: Math.round(pointer.x),
+      y: Math.round(pointer.y)
+    };
+
+    this.creationPoints.push(point);
+    this.addCreationMarker(point);
+    this.updateCreationShape();
+  }
+
+  private handleCanvasMove(event: any): void {
+    if (!this.canvas || !this.isCreatingZone || !this.creationPoints.length) {
+      return;
+    }
+
+    const pointer = this.canvas.getPointer(event.e);
+    this.creationPreviewPoint = {
+      x: Math.round(pointer.x),
+      y: Math.round(pointer.y)
+    };
+    this.updateCreationShape();
+  }
+
+  private updateCreationShape(): void {
+    if (!this.canvas) {
+      return;
+    }
+
+    const points = [...this.creationPoints];
+    if (this.creationPreviewPoint) {
+      points.push(this.creationPreviewPoint);
+    }
+
+    if (points.length < 2) {
+      if (this.creationPolyline) {
+        this.canvas.remove(this.creationPolyline);
+        this.creationPolyline = undefined;
+      }
+      this.canvas.requestRenderAll();
+      return;
+    }
+
+    if (!this.creationPolyline) {
+      this.creationPolyline = new fabric.Polyline(points, {
+        fill: 'rgba(37, 99, 235, 0.12)',
+        stroke: '#2563eb',
+        strokeWidth: 2,
+        selectable: false,
+        evented: false,
+        objectCaching: false
+      });
+      this.canvas.add(this.creationPolyline);
+      this.creationPolyline.moveTo(0);
+    } else {
+      this.creationPolyline.set({ points });
+    }
+
+    this.canvas.requestRenderAll();
+  }
+
+  private addCreationMarker(point: { x: number; y: number }): void {
+    if (!this.canvas) {
+      return;
+    }
+
+    const marker = new fabric.Circle({
+      radius: 5,
+      fill: '#2563eb',
+      stroke: '#ffffff',
+      strokeWidth: 2,
+      left: point.x,
+      top: point.y,
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      evented: false
+    });
+
+    this.creationPointMarkers.push(marker);
+    this.canvas.add(marker);
+    marker.moveTo(this.canvas.getObjects().length - 1);
+    this.canvas.requestRenderAll();
+  }
+
+  private clearCreationArtifacts(): void {
+    if (!this.canvas) {
+      return;
+    }
+
+    if (this.creationPolyline) {
+      this.canvas.remove(this.creationPolyline);
+      this.creationPolyline = undefined;
+    }
+
+    if (this.creationPointMarkers.length) {
+      this.creationPointMarkers.forEach((marker) => this.canvas?.remove(marker));
+      this.creationPointMarkers = [];
+    }
+  }
+
+  private detachCreationListeners(): void {
+    if (!this.canvas) {
+      return;
+    }
+
+    this.canvas.off('mouse:down', this.canvasClickHandler);
+    this.canvas.off('mouse:move', this.canvasMoveHandler);
+  }
+
+  private restoreCanvasInteraction(): void {
+    if (!this.canvas) {
+      return;
+    }
+
+    this.canvas.selection = true;
+    this.canvas.defaultCursor = 'default';
+    this.togglePolygonSelectability(true);
+  }
+
+  private togglePolygonSelectability(enabled: boolean): void {
+    if (!this.canvas) {
+      return;
+    }
+
+    this.canvas.getObjects().forEach((obj: any) => {
+      if (obj.type === 'polygon') {
+        obj.selectable = enabled;
+        obj.evented = enabled;
+      }
+    });
   }
 }
