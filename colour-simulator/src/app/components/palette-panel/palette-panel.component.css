@@ -1,0 +1,78 @@
+.palette {
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 2.5rem;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  display: grid;
+  gap: 2.5rem;
+}
+
+.palette__header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.palette__header h2 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.palette__header p {
+  margin: 0.5rem 0 0;
+  color: #6c7280;
+}
+
+.palette__zones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.zone-chip {
+  border: 1px solid #d5d8dc;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  background: #f5f7fa;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.zone-chip--active {
+  background: rgba(0, 157, 74, 0.15);
+  border-color: rgba(0, 157, 74, 0.5);
+  color: #006b33;
+}
+
+.palette__families {
+  display: grid;
+  gap: 2rem;
+}
+
+.family {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.family__header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.family__header p {
+  margin: 0.4rem 0 0;
+  color: #6c7280;
+}
+
+.family__colours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 960px) {
+  .palette {
+    padding: 1.5rem;
+  }
+}

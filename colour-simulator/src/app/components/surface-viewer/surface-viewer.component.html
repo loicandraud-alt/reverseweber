@@ -1,0 +1,12 @@
+<section class="viewer" [style.--accent]="surface.accentColour">
+  <div class="viewer__background" [style.backgroundImage]="surface.preview"></div>
+  <div class="viewer__overlay">
+    <div class="viewer__zone viewer__zone--primary"></div>
+    <div class="viewer__zone viewer__zone--secondary"></div>
+    <div class="viewer__zone viewer__zone--details"></div>
+  </div>
+  <footer class="viewer__caption">
+    <strong>{{ surface.name }}</strong>
+    <span>Utilisez les pastilles pour projeter vos teintes sur cette ambiance.</span>
+  </footer>
+</section>

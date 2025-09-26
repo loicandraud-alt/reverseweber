@@ -1,0 +1,9 @@
+<ul class="legend">
+  <li *ngFor="let zone of surface.zones">
+    <span class="legend__swatch" [style.background]="selectedColours[zone.id]?.hex || '#d5d8dc'"></span>
+    <div>
+      <strong>{{ zone.label }}</strong>
+      <p>{{ selectedColours[zone.id]?.name || 'Non définie' }}</p>
+    </div>
+  </li>
+</ul>

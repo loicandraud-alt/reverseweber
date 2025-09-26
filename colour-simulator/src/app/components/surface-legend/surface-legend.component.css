@@ -1,0 +1,31 @@
+.legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+}
+
+.legend li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.legend__swatch {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+}
+
+.legend p {
+  margin: 0;
+  color: #6c7280;
+}
+
+.legend strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
