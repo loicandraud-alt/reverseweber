@@ -1,0 +1,17 @@
+.simulator {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.simulator__canvas {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (max-width: 1200px) {
+  .simulator {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,16 @@
+<article class="colour-card" [class.colour-card--selected]="selected">
+  <div class="colour-card__swatch" [style.background]="colour.hex"></div>
+  <header>
+    <h4>{{ colour.name }}</h4>
+    <span>{{ colour.code }}</span>
+  </header>
+  <p>{{ colour.description }}</p>
+  <div class="colour-card__actions">
+    <button type="button" class="colour-card__apply" (click)="apply.emit()">
+      {{ selected ? 'Appliquée' : 'Appliquer' }}
+    </button>
+    <button type="button" class="colour-card__favourite" (click)="toggleFavourite.emit()" [attr.aria-pressed]="favourite">
+      <span class="material-symbols-rounded">{{ favourite ? 'favorite' : 'favorite\_border' }}</span>
+    </button>
+  </div>
+</article>

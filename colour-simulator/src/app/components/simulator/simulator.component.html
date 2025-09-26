@@ -1,0 +1,13 @@
+<section class="simulator" *ngIf="vm$ | async as vm">
+  <app-project-sidebar
+    [surface]="vm.surface"
+    [surfaces]="vm.surfaces"
+    [selectedColours]="vm.selectedColours"
+    (surfaceChange)="onSurfaceChange($event)"
+  ></app-project-sidebar>
+
+  <div class="simulator__canvas">
+    <app-surface-viewer [surface]="vm.surface" [selectedColours]="vm.selectedColours"></app-surface-viewer>
+    <app-palette-panel [surface]="vm.surface" [selectedColours]="vm.selectedColours"></app-palette-panel>
+  </div>
+</section>

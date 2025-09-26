@@ -1,0 +1,38 @@
+<section class="palette">
+  <header class="palette__header">
+    <div>
+      <h2>Palette chromatique</h2>
+      <p>Sélectionnez une zone puis appliquez une couleur parmi nos familles.</p>
+    </div>
+    <div class="palette__zones">
+      <button
+        *ngFor="let zone of surface.zones"
+        type="button"
+        class="zone-chip"
+        [class.zone-chip--active]="isZoneActive(zone.id)"
+        (click)="setActiveZone(zone.id)"
+      >
+        {{ zone.label }}
+      </button>
+    </div>
+  </header>
+
+  <section class="palette__families">
+    <article class="family" *ngFor="let family of families">
+      <header class="family__header">
+        <h3>{{ family.title }}</h3>
+        <p>{{ family.description }}</p>
+      </header>
+      <div class="family__colours">
+        <app-colour-card
+          *ngFor="let colour of family.colours"
+          [colour]="colour"
+          [selected]="selectedColours[activeZoneId || surface.zones[0].id]?.id === colour.id"
+          [favourite]="isFavourite(colour)"
+          (apply)="applyColour(colour, activeZoneId || surface.zones[0].id)"
+          (toggleFavourite)="toggleFavourite(colour)"
+        ></app-colour-card>
+      </div>
+    </article>
+  </section>
+</section>

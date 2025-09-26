@@ -1,0 +1,24 @@
+<section class="intro">
+  <div class="intro__content">
+    <h1>Bienvenue dans le simulateur de couleurs Weber</h1>
+    <p class="intro__lead">
+      Explorez notre bibliothèque chromatique, appliquez vos teintes préférées sur des ambiances ultra-réalistes et
+      exportez vos projets en quelques clics.
+    </p>
+    <div class="intro__actions">
+      <button class="intro__cta" (click)="startSimulation()">Lancer le simulateur</button>
+      <a class="intro__secondary" href="https://www.weber.fr" target="_blank" rel="noopener">
+        Découvrir les solutions Weber
+      </a>
+    </div>
+  </div>
+  <div class="intro__steps">
+    <article class="intro-step" *ngFor="let step of steps; let index = index">
+      <span class="intro-step__index">{{ index + 1 }}</span>
+      <div>
+        <h2>{{ step.title }}</h2>
+        <p>{{ step.description }}</p>
+      </div>
+    </article>
+  </div>
+</section>
