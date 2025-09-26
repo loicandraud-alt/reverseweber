@@ -15,8 +15,8 @@
 }
 
 .colour-card--selected {
-  border-color: rgba(0, 157, 74, 0.4);
-  box-shadow: 0 16px 30px rgba(0, 157, 74, 0.12);
+  border-color: rgba(247, 147, 30, 0.45);
+  box-shadow: 0 16px 30px rgba(247, 147, 30, 0.18);
 }
 
 .colour-card__swatch {
@@ -64,7 +64,8 @@
 }
 
 .colour-card--selected .colour-card__apply {
-  background: #009d4a;
+  background: linear-gradient(135deg, #ffe100, #f7931e);
+  color: #1b1b1b;
 }
 
 .colour-card__favourite {

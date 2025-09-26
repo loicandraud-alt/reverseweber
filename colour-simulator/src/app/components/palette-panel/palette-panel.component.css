@@ -40,9 +40,9 @@
 }
 
 .zone-chip--active {
-  background: rgba(0, 157, 74, 0.15);
-  border-color: rgba(0, 157, 74, 0.5);
-  color: #006b33;
+  background: rgba(255, 193, 66, 0.2);
+  border-color: rgba(247, 147, 30, 0.55);
+  color: #8c4f00;
 }
 
 .palette__families {

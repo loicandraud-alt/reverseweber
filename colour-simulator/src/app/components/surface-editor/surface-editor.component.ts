@@ -1,32 +1,39 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+  ViewChild
+} from '@angular/core';
+import { CustomSurfaceData, CustomSurfaceZone } from '../../services/project-state.service';
 
 declare const fabric: any;
-
-interface SurfacePoint {
-  x: number;
-  y: number;
-}
-
-interface SurfaceZone {
-  id: string;
-  label: string;
-  points: SurfacePoint[];
-}
 
 @Component({
   selector: 'app-surface-editor',
   templateUrl: './surface-editor.component.html',
   styleUrls: ['./surface-editor.component.css']
 })
-export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
+export class SurfaceEditorComponent implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('canvasEl', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+  @Input() customSurface: CustomSurfaceData | null = null;
+  @Output() readonly zonesChange = new EventEmitter<CustomSurfaceZone[]>();
 
-  zones: SurfaceZone[] = [];
+  zones: CustomSurfaceZone[] = [];
   private canvas?: any;
   private nextZoneIndex = 1;
   selectedZoneId: string | null = null;
   backgroundName = '';
   fabricUnavailable = false;
+  private backgroundUrl: string | null = null;
+  private pendingBackgroundUrl: string | null = null;
+  private pendingZones: CustomSurfaceZone[] | null = null;
+  private isRestoringZones = false;
 
   ngAfterViewInit(): void {
     if (typeof fabric === 'undefined') {
@@ -51,6 +58,28 @@ export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
         this.makePolygonEditable(target);
       }
     });
+
+    if (this.pendingBackgroundUrl) {
+      this.setCanvasBackground(this.pendingBackgroundUrl);
+      this.pendingBackgroundUrl = null;
+    } else if (this.customSurface?.imageDataUrl) {
+      this.setCanvasBackground(this.customSurface.imageDataUrl);
+    }
+
+    if (this.pendingZones) {
+      this.applyZones(this.pendingZones);
+      this.pendingZones = null;
+    } else if (this.customSurface?.zones?.length) {
+      this.applyZones(this.customSurface.zones);
+    }
+
+    this.backgroundName = this.customSurface?.imageName ?? this.backgroundName;
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['customSurface']) {
+      this.handleCustomSurfaceChange(changes['customSurface'].currentValue);
+    }
   }
 
   ngOnDestroy(): void {
@@ -61,32 +90,12 @@ export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
     return !!this.canvas;
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) {
-      return;
-    }
-
-    const file = input.files[0];
-    this.backgroundName = file.name;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      fabric.Image.fromURL(dataUrl, (img: any) => {
-        const width = img.width ?? 800;
-        const height = img.height ?? 500;
-        this.canvas.setDimensions({ width, height });
-        this.canvas.setBackgroundImage(img, this.canvas.renderAll.bind(this.canvas), {
-          scaleX: width / (img.width || width),
-          scaleY: height / (img.height || height)
-        });
-      }, { crossOrigin: 'anonymous' });
-    };
-    reader.readAsDataURL(file);
+  get canAddZones(): boolean {
+    return this.isCanvasReady && !!this.customSurface?.imageDataUrl;
   }
 
   addPolygonZone(): void {
-    if (!this.canvas) {
+    if (!this.canvas || !this.customSurface?.imageDataUrl) {
       return;
     }
 
@@ -138,7 +147,7 @@ export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  onZoneLabelChange(zone: SurfaceZone): void {
+  onZoneLabelChange(zone: CustomSurfaceZone): void {
     if (!this.canvas) {
       return;
     }
@@ -147,10 +156,11 @@ export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
     if (object) {
       object.set('label', zone.label);
       this.canvas.requestRenderAll();
+      this.syncZonesFromCanvas();
     }
   }
 
-  selectZone(zone: SurfaceZone): void {
+  selectZone(zone: CustomSurfaceZone): void {
     if (!this.canvas) {
       return;
     }
@@ -169,13 +179,13 @@ export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
     }
 
     const objects = this.canvas.getObjects().filter((item: any) => item.type === 'polygon');
-    const zones: SurfaceZone[] = objects.map((obj: any) => {
+    const zones: CustomSurfaceZone[] = objects.map((obj: any) => {
       const zoneId = obj.zoneId ?? `zone-${this.nextZoneIndex++}`;
       obj.set('zoneId', zoneId);
       const label = obj.label ?? `Zone ${this.nextZoneIndex - 1}`;
       obj.set('label', label);
       const matrix = obj.calcTransformMatrix();
-      const transformedPoints: SurfacePoint[] = obj.points.map((point: any) => {
+      const transformedPoints = obj.points.map((point: any) => {
         const pointWithOffset = new fabric.Point(point.x - obj.pathOffset.x, point.y - obj.pathOffset.y);
         const transformed = fabric.util.transformPoint(pointWithOffset, matrix);
         return {
@@ -186,7 +196,31 @@ export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
       return {
         id: zoneId,
         label,
-        points: transformedPoints
+        points: transformedPoints,
+        fabricState: obj.toObject([
+          'zoneId',
+          'label',
+          'left',
+          'top',
+          'angle',
+          'scaleX',
+          'scaleY',
+          'originX',
+          'originY',
+          'points',
+          'pathOffset',
+          'fill',
+          'stroke',
+          'strokeWidth',
+          'perPixelTargetFind',
+          'objectCaching',
+          'cornerSize',
+          'transparentCorners',
+          'lockRotation',
+          'lockScalingFlip',
+          'lockScalingX',
+          'lockScalingY'
+        ])
       };
     });
 
@@ -194,6 +228,12 @@ export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
     if (this.selectedZoneId && !zones.some(zone => zone.id === this.selectedZoneId)) {
       this.selectedZoneId = null;
     }
+    this.updateNextZoneIndexFromZones(zones);
+    if (this.isRestoringZones) {
+      this.isRestoringZones = false;
+      return;
+    }
+    this.emitZonesChange();
   }
 
   private onSelection(event: any): void {
@@ -236,5 +276,143 @@ export class SurfaceEditorComponent implements AfterViewInit, OnDestroy {
       });
       return controls;
     }, {});
+  }
+
+  private handleCustomSurfaceChange(customSurface: CustomSurfaceData | null): void {
+    this.backgroundName = customSurface?.imageName ?? '';
+    if (!this.canvas) {
+      this.pendingBackgroundUrl = customSurface?.imageDataUrl ?? null;
+      this.pendingZones = customSurface?.zones ?? null;
+      return;
+    }
+
+    if (!customSurface || !customSurface.imageDataUrl) {
+      this.clearCanvas();
+      return;
+    }
+
+    if (customSurface.imageDataUrl !== this.backgroundUrl) {
+      this.setCanvasBackground(customSurface.imageDataUrl);
+    }
+    this.applyZones(customSurface.zones ?? []);
+  }
+
+  private setCanvasBackground(imageUrl: string): void {
+    if (!this.canvas) {
+      this.pendingBackgroundUrl = imageUrl;
+      return;
+    }
+
+    fabric.Image.fromURL(
+      imageUrl,
+      (img: any) => {
+        const width = img.width ?? 800;
+        const height = img.height ?? 500;
+        this.canvas.setDimensions({ width, height });
+        this.canvas.setBackgroundImage(
+          img,
+          this.canvas.renderAll.bind(this.canvas),
+          {
+            originX: 'left',
+            originY: 'top',
+            scaleX: width / (img.width || width),
+            scaleY: height / (img.height || height)
+          }
+        );
+        this.backgroundUrl = imageUrl;
+      },
+      { crossOrigin: 'anonymous' }
+    );
+  }
+
+  private clearCanvas(): void {
+    if (!this.canvas) {
+      return;
+    }
+    this.canvas.setBackgroundImage(undefined, this.canvas.renderAll.bind(this.canvas));
+    this.backgroundUrl = null;
+    this.zones = [];
+    this.pendingZones = null;
+    this.selectedZoneId = null;
+    const objects = this.canvas.getObjects();
+    objects.forEach((obj: any) => this.canvas?.remove(obj));
+    this.canvas.renderAll();
+    this.emitZonesChange();
+  }
+
+  private applyZones(zones: CustomSurfaceZone[]): void {
+    if (!this.canvas) {
+      this.pendingZones = zones;
+      return;
+    }
+
+    this.isRestoringZones = true;
+    const existingPolygons = this.canvas
+      .getObjects()
+      .filter((item: any) => item.type === 'polygon');
+    existingPolygons.forEach((item: any) => this.canvas?.remove(item));
+
+    zones.forEach((zone) => {
+      const fabricState = zone.fabricState ?? {};
+      const basePoints = (fabricState as any).points ?? zone.points ?? [];
+      const polygon = new fabric.Polygon(basePoints, {
+        fill: (fabricState as any).fill ?? 'rgba(0, 153, 255, 0.25)',
+        stroke: (fabricState as any).stroke ?? '#0099ff',
+        strokeWidth: (fabricState as any).strokeWidth ?? 2,
+        perPixelTargetFind: (fabricState as any).perPixelTargetFind ?? true,
+        objectCaching: (fabricState as any).objectCaching ?? false,
+        cornerSize: (fabricState as any).cornerSize ?? 8,
+        transparentCorners: (fabricState as any).transparentCorners ?? false,
+        lockRotation: (fabricState as any).lockRotation ?? true,
+        lockScalingFlip: (fabricState as any).lockScalingFlip ?? true,
+        lockScalingX: (fabricState as any).lockScalingX ?? true,
+        lockScalingY: (fabricState as any).lockScalingY ?? true,
+        left: (fabricState as any).left ?? 0,
+        top: (fabricState as any).top ?? 0,
+        angle: (fabricState as any).angle ?? 0,
+        scaleX: (fabricState as any).scaleX ?? 1,
+        scaleY: (fabricState as any).scaleY ?? 1,
+        originX: (fabricState as any).originX ?? 'left',
+        originY: (fabricState as any).originY ?? 'top'
+      });
+      polygon.set('zoneId', zone.id);
+      polygon.set('label', zone.label);
+      if ((fabricState as any).pathOffset) {
+        polygon.pathOffset = new fabric.Point(
+          (fabricState as any).pathOffset.x ?? polygon.pathOffset.x,
+          (fabricState as any).pathOffset.y ?? polygon.pathOffset.y
+        );
+      }
+      this.makePolygonEditable(polygon);
+      this.canvas?.add(polygon);
+    });
+
+    this.canvas.requestRenderAll();
+    this.zones = zones;
+    this.updateNextZoneIndexFromZones(zones);
+    this.syncZonesFromCanvas();
+  }
+
+  private emitZonesChange(): void {
+    this.zonesChange.emit(
+      this.zones.map((zone) => ({
+        ...zone,
+        fabricState: JSON.parse(JSON.stringify(zone.fabricState ?? {}))
+      }))
+    );
+  }
+
+  private updateNextZoneIndexFromZones(zones: CustomSurfaceZone[]): void {
+    const indices = zones
+      .map((zone) => {
+        const match = zone.id.match(/(\d+)$/);
+        return match ? Number(match[1]) : NaN;
+      })
+      .filter((value) => !Number.isNaN(value));
+    if (indices.length) {
+      this.nextZoneIndex = Math.max(...indices) + 1;
+    } else if (zones.length === 0) {
+      this.nextZoneIndex = 1;
+    }
   }
 }

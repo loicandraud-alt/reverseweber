@@ -1,17 +1,16 @@
 <section class="surface-editor">
   <header class="surface-editor__header">
     <h2>Éditeur de surface</h2>
-    <p>Téléchargez une image et ajoutez des zones interactives pour votre projet.</p>
+    <p>Importez une ambiance depuis la colonne de gauche puis dessinez les zones à coloriser.</p>
   </header>
 
   <div class="surface-editor__controls">
-    <label class="file-input">
-      <span class="file-input__label">Choisir une image</span>
-      <input type="file" accept="image/*" (change)="onFileSelected($event)" />
-    </label>
-    <button type="button" (click)="addPolygonZone()" [disabled]="!isCanvasReady">Ajouter une zone</button>
+    <button type="button" (click)="addPolygonZone()" [disabled]="!canAddZones">Ajouter une zone</button>
     <button type="button" class="danger" (click)="removeSelectedZone()" [disabled]="!selectedZoneId">Supprimer la zone sélectionnée</button>
     <span class="surface-editor__filename" *ngIf="backgroundName">Image : {{ backgroundName }}</span>
+    <span class="surface-editor__hint" *ngIf="!backgroundName && !fabricUnavailable">
+      Importez une image personnalisée pour commencer la délimitation.
+    </span>
   </div>
 
   <p *ngIf="fabricUnavailable" class="surface-editor__warning">
@@ -39,4 +38,7 @@
       </ul>
     </aside>
   </div>
+  <p class="surface-editor__empty" *ngIf="!fabricUnavailable && !backgroundName">
+    Laissez-vous guider : importez une image dans la barre latérale puis utilisez le bouton «&nbsp;Ajouter une zone&nbsp;» pour dessiner vos zones avec Fabric.js.
+  </p>
 </section>

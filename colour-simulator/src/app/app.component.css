@@ -47,7 +47,7 @@
   right: 0;
   bottom: -0.4rem;
   height: 3px;
-  background-color: #009d4a;
+  background: linear-gradient(135deg, #ffe100, #f7931e);
   border-radius: 999px;
 }
 
