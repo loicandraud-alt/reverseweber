@@ -53,6 +53,18 @@
   background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
+.surface-editor__controls .secondary {
+  background: #e5e7eb;
+  color: #1f2937;
+  box-shadow: none;
+}
+
+.surface-editor__controls .secondary:not(:disabled):hover {
+  box-shadow: none;
+  transform: translateY(-1px);
+  background: #d1d5db;
+}
+
 .surface-editor__filename {
   font-size: 0.9rem;
   color: #1f2937;
@@ -70,6 +82,25 @@
   background: #fef3c7;
   color: #92400e;
   border: 1px solid #f59e0b;
+}
+
+.surface-editor__instructions {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+  border: 1px dashed rgba(37, 99, 235, 0.35);
+  color: #1d4ed8;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.surface-editor__instructions p {
+  margin: 0;
+}
+
+.surface-editor__instructions-count {
+  margin: 0;
+  font-weight: 600;
 }
 
 .surface-editor__workspace {

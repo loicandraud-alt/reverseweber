@@ -6,12 +6,51 @@
 
   <div class="surface-editor__controls">
     <button type="button" (click)="addPolygonZone()" [disabled]="!canAddZones">Ajouter une zone</button>
-    <button type="button" class="danger" (click)="removeSelectedZone()" [disabled]="!selectedZoneId">Supprimer la zone sélectionnée</button>
+    <button type="button" (click)="finishPolygonCreation()" [disabled]="!canFinishZone">Terminer la zone</button>
+    <button
+      type="button"
+      class="secondary"
+      (click)="removeLastCreationPoint()"
+      [disabled]="!isCreatingZone || !creationPointsCount"
+    >
+      Supprimer le dernier point
+    </button>
+    <button
+      type="button"
+      class="secondary"
+      (click)="cancelPolygonCreation()"
+      [disabled]="!isCreatingZone"
+    >
+      Annuler
+    </button>
+    <button
+      type="button"
+      class="danger"
+      (click)="removeSelectedZone()"
+      [disabled]="!selectedZoneId || isCreatingZone"
+    >
+      Supprimer la zone sélectionnée
+    </button>
     <span class="surface-editor__filename" *ngIf="backgroundName">Image : {{ backgroundName }}</span>
     <span class="surface-editor__hint" *ngIf="!backgroundName && !fabricUnavailable">
       Importez une image personnalisée pour commencer la délimitation.
     </span>
   </div>
+
+  <div class="surface-editor__instructions" *ngIf="isCreatingZone">
+    <p>
+      Cliquez pour placer les sommets de votre zone personnalisée. Définissez au moins trois points puis terminez en cliquant sur
+      le premier sommet ou sur «&nbsp;Terminer la zone&nbsp;».
+    </p>
+    <p>
+      Double-cliquez ou appuyez sur Entrée pour fermer la zone. Utilisez «&nbsp;Supprimer le dernier point&nbsp;» ou la touche
+      Retour arrière pour corriger.
+    </p>
+    <p class="surface-editor__instructions-count">Points définis : {{ creationPointsCount }}</p>
+  </div>
+  <p class="surface-editor__hint" *ngIf="zones.length && !isCreatingZone">
+    Conseil : sélectionnez une zone puis faites glisser ses sommets pour ajuster précisément le contour.
+  </p>
 
   <p *ngIf="fabricUnavailable" class="surface-editor__warning">
     Fabric.js n'a pas pu être chargé. Vérifiez votre connexion réseau ou ajoutez la bibliothèque au projet pour activer l'éditeur.
