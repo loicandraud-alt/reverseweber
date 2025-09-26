@@ -13,6 +13,7 @@ import { SurfaceViewerComponent } from './components/surface-viewer/surface-view
 import { RouterModule } from '@angular/router';
 import { ColourCardComponent } from './components/colour-card/colour-card.component';
 import { SurfaceLegendComponent } from './components/surface-legend/surface-legend.component';
+import { SurfaceEditorComponent } from './components/surface-editor/surface-editor.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { SurfaceLegendComponent } from './components/surface-legend/surface-lege
     PalettePanelComponent,
     SurfaceViewerComponent,
     ColourCardComponent,
-    SurfaceLegendComponent
+    SurfaceLegendComponent,
+    SurfaceEditorComponent
   ],
   imports: [
     BrowserModule,

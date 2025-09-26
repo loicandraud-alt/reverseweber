@@ -1,0 +1,42 @@
+<section class="surface-editor">
+  <header class="surface-editor__header">
+    <h2>Éditeur de surface</h2>
+    <p>Téléchargez une image et ajoutez des zones interactives pour votre projet.</p>
+  </header>
+
+  <div class="surface-editor__controls">
+    <label class="file-input">
+      <span class="file-input__label">Choisir une image</span>
+      <input type="file" accept="image/*" (change)="onFileSelected($event)" />
+    </label>
+    <button type="button" (click)="addPolygonZone()" [disabled]="!isCanvasReady">Ajouter une zone</button>
+    <button type="button" class="danger" (click)="removeSelectedZone()" [disabled]="!selectedZoneId">Supprimer la zone sélectionnée</button>
+    <span class="surface-editor__filename" *ngIf="backgroundName">Image : {{ backgroundName }}</span>
+  </div>
+
+  <p *ngIf="fabricUnavailable" class="surface-editor__warning">
+    Fabric.js n'a pas pu être chargé. Vérifiez votre connexion réseau ou ajoutez la bibliothèque au projet pour activer l'éditeur.
+  </p>
+
+  <div class="surface-editor__workspace" *ngIf="!fabricUnavailable">
+    <canvas #canvasEl></canvas>
+    <aside class="surface-editor__zones" *ngIf="zones.length">
+      <h3>Zones définies</h3>
+      <ul>
+        <li *ngFor="let zone of zones" [class.is-active]="zone.id === selectedZoneId">
+          <button type="button" (click)="selectZone(zone)">{{ zone.label }}</button>
+          <label>
+            Nom
+            <input type="text" [(ngModel)]="zone.label" (ngModelChange)="onZoneLabelChange(zone)" />
+          </label>
+          <div class="zone-meta">
+            Points :
+            <span *ngFor="let point of zone.points; let i = index">
+              ({{ point.x }}, {{ point.y }})<span *ngIf="i < zone.points.length - 1"> ·</span>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </aside>
+  </div>
+</section>
