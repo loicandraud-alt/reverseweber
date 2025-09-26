@@ -1,9 +1,8 @@
 <section class="simulator" *ngIf="vm$ | async as vm">
   <app-project-sidebar
     [surface]="vm.surface"
-    [surfaces]="vm.surfaces"
     [selectedColours]="vm.selectedColours"
-    (surfaceChange)="onSurfaceChange($event)"
+    [customSurface]="vm.customSurface"
     (imageUpload)="onImageUpload($event)"
   ></app-project-sidebar>
 

@@ -20,39 +20,6 @@
   line-height: 1.5;
 }
 
-.sidebar__section h3 {
-  margin: 0 0 1rem;
-  font-size: 1.1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #5b6475;
-}
-
-.sidebar__surface {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem;
-  border-radius: 18px;
-  background: rgba(247, 147, 30, 0.08);
-}
-
-.surface-indicator {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  display: inline-block;
-}
-
-.sidebar__categories details {
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 0.85rem 1.2rem;
-  margin-bottom: 0.8rem;
-  background: #fafbfc;
-}
-
 .sidebar__upload {
   display: inline-flex;
   align-items: center;
@@ -77,38 +44,53 @@
   display: none;
 }
 
-.sidebar__categories summary {
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.surface-option {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 0.75rem;
-  border-radius: 14px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: background 120ms ease;
-  text-align: left;
-}
-
-.surface-option--active {
-  background: rgba(255, 181, 46, 0.18);
-}
-
-.surface-option__preview {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-}
-
 .sidebar__section--zones {
   border-top: 1px solid #eef1f6;
   padding-top: 1.5rem;
+}
+
+.sidebar__section h3 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5b6475;
+}
+
+.sidebar__preview {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.sidebar__preview img {
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  max-height: 260px;
+}
+
+.sidebar__filename {
+  margin: 0;
+  font-weight: 600;
+}
+
+.sidebar__placeholder {
+  margin: 0;
+  padding: 1rem;
+  border-radius: 16px;
+  background: #f8fafc;
+  color: #6c7280;
+}
+
+.sidebar__hint {
+  margin: 0;
+  color: #6c7280;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 1200px) {
