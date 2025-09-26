@@ -1,6 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ProjectStateService, CustomSurfaceZone } from '../../services/project-state.service';
-import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-simulator',
@@ -12,10 +11,6 @@ export class SimulatorComponent {
   readonly vm$ = this.projectState.viewModel$;
 
   constructor(private readonly projectState: ProjectStateService) {}
-
-  onSurfaceChange(surfaceId: string): void {
-    this.projectState.selectSurface(surfaceId);
-  }
 
   onImageUpload(file: File | null): void {
     if (!file) {

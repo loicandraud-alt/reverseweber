@@ -5,40 +5,23 @@
   </header>
 
   <section class="sidebar__section">
-    <h3>Ambiance sélectionnée</h3>
-    <div class="sidebar__surface">
-      <span class="surface-indicator" [style.background]="surface.accentColour"></span>
-      <div>
-        <strong>{{ surface.name }}</strong>
-        <p>{{ surface.zones.length }} zones à personnaliser</p>
-      </div>
+    <h3>Image importée</h3>
+    <div class="sidebar__preview" *ngIf="uploadedImageUrl; else emptyState">
+      <img [src]="uploadedImageUrl" [alt]="uploadedImageName" />
+      <p class="sidebar__filename">{{ uploadedImageName }}</p>
     </div>
+    <ng-template #emptyState>
+      <p class="sidebar__placeholder">Aucune image n'a encore été importée.</p>
+    </ng-template>
   </section>
 
   <section class="sidebar__section">
-    <h3>Choisir une ambiance</h3>
+    <h3>Uploader une image</h3>
     <label class="sidebar__upload">
       <input type="file" accept="image/*" (change)="onImageSelected($event)" />
-      Importer une image
+      Uploader une image
     </label>
-    <div class="sidebar__categories">
-      <details *ngFor="let category of categories" [open]="category.id === surface.category">
-        <summary>{{ category.label }}</summary>
-        <ul>
-          <li *ngFor="let option of surfacesByCategory(category.id); trackBy: trackBySurface">
-            <button
-              type="button"
-              class="surface-option"
-              [class.surface-option--active]="option.id === surface.id"
-              (click)="surfaceChange.emit(option.id)"
-            >
-              <span class="surface-option__preview" [style.background]="option.accentColour"></span>
-              <span>{{ option.name }}</span>
-            </button>
-          </li>
-        </ul>
-      </details>
-    </div>
+    <p class="sidebar__hint">Formats acceptés : JPG, PNG, GIF. Taille maximale recommandée : 5&nbsp;Mo.</p>
   </section>
 
   <section class="sidebar__section sidebar__section--zones">
